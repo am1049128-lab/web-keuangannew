@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kas kelas (contoh tampilan)</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Young+Serif&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#F3F6F1;--card:#fff;--ink:#14302F;--rule:#C9D6CC;--ok:#1F7A4D;--warn:#9A5F0C;--bad:#B23A48;--head:'Young Serif',Georgia,serif;--body:'Instrument Sans',system-ui,sans-serif;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#0F1B1B;--card:#162626;--ink:#E4EFEA;--rule:#2B4242;--ok:#59C48C;--warn:#E3A650;--bad:#F08A96;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#0F1B1B;--card:#162626;--ink:#E4EFEA;--rule:#2B4242;--ok:#59C48C;--warn:#E3A650;--bad:#F08A96;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;font:1rem/1.55 var(--body);color:var(--ink);background:var(--paper)}
+main{max-width:960px;margin:0 auto;padding:24px 20px 64px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:2px solid var(--ink);padding-bottom:12px}
+h1{font:400 1.7rem var(--head);margin:0}
+h2{font:400 1.3rem var(--head);margin:28px 0 10px}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer;padding:7px 14px;border:2px solid var(--ink);border-radius:6px;background:var(--card);font-weight:600}
+button:focus-visible,input:focus-visible{outline:3px solid var(--ok);outline-offset:2px}
+input{padding:8px 10px;border:2px solid var(--ink);border-radius:6px;background:var(--card);min-width:0}
+nav{display:flex;gap:6px;margin:16px 0;flex-wrap:wrap}
+nav button[aria-current=page]{background:var(--ink);color:var(--paper)}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.note{padding:10px 14px;border-left:5px solid var(--warn);background:var(--card);margin-top:16px;font-size:.95rem}
+.balance{font:400 clamp(2.6rem,10vw,4.8rem)/1 var(--head);font-variant-numeric:tabular-nums;display:inline-block;padding-bottom:6px;border-bottom:5px double var(--ink);margin:8px 0 4px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:20px}
+.stats div{padding:12px 14px;background:var(--card);border-left:5px solid var(--ink)}
+.stats b{display:block;font:400 1.4rem var(--head);font-variant-numeric:tabular-nums}
+.scroll{overflow-x:auto;background:var(--card);border:1px solid var(--rule)}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{padding:9px 12px;border-bottom:1px solid var(--rule);text-align:left;white-space:nowrap}
+th{border-bottom:2px solid var(--ink)}
+td.n,th.n{text-align:right}
+.cell{min-width:44px;padding:3px 8px;border-width:1.5px}
+.Lunas{color:var(--ok);font-weight:600}.Kurang{color:var(--warn);font-weight:600}.Belum{color:var(--bad);font-weight:600}
+.muted{color:color-mix(in srgb,var(--ink) 65%,transparent)}
+pre{background:var(--card);border:1px solid var(--rule);padding:12px;overflow-x:auto;font-size:.85rem}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script>
+const NAMES=['Aditya','Bella','Citra','Dimas','Eka','Fajar','Gita','Hana','Ilham','Joko','Kirana','Lutfi','Maya','Nadia','Oka','Putri','Raka','Sinta','Tegar','Wulan'];
+const S={role:'viewer',tab:'Ringkasan',
+  members:NAMES.map((n,i)=>({id:i,name:n})),
+  periods:['Minggu 1 Okt','Minggu 2 Okt','Minggu 3 Okt','Minggu 4 Okt'].map((l,i)=>({id:i,label:l,amount:10000})),
+  pay:new Set(),
+  exp:[{d:'2026-10-05',k:'Fotokopi materi kuliah',a:35000,nota:'nota-fotokopi.jpg'},{d:'2026-10-12',k:'Spidol dan penghapus papan',a:28000,nota:'nota-atk.jpg'},{d:'2026-10-16',k:'Hadiah ulang tahun dosen',a:60000,nota:''}]};
+S.members.forEach(m=>S.periods.forEach(p=>{if((m.id*7+p.id*5)%10<[9,8,6,4][p.id])S.pay.add(m.id+'|'+p.id)}));
+const TABS=['Ringkasan','Pembayaran','Pengeluaran','Laporan'];
+const rp=n=>'Rp'+Number(n).toLocaleString('id-ID');
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const due=()=>S.periods.reduce((a,p)=>a+p.amount,0);
+const paidBy=m=>S.periods.reduce((a,p)=>a+(S.pay.has(m+'|'+p.id)?p.amount:0),0);
+const st=m=>{const p=paidBy(m);return due()>0&&p>=due()?'Lunas':p>0?'Kurang':'Belum'};
+const tin=()=>S.members.reduce((a,m)=>a+paidBy(m.id),0);
+const tout=()=>S.exp.reduce((a,e)=>a+e.a,0);
+const T=()=>S.role==='treasurer';
+
+function csv(){
+  const rows=[['Nama',...S.periods.map(p=>p.label),'Total dibayar','Status'],
+    ...S.members.map(m=>[m.name,...S.periods.map(p=>S.pay.has(m.id+'|'+p.id)?'Lunas':'-'),paidBy(m.id),st(m.id)]),
+    [],['Pengeluaran'],['Tanggal','Keterangan','Jumlah'],...S.exp.map(e=>[e.d,e.k,e.a]),[],['Saldo kas',tin()-tout()]];
+  return rows.map(r=>r.join(',')).join('\n');
+}
+
+function view(){
+  if(S.tab==='Ringkasan'){
+    const bl=S.members.filter(m=>st(m.id)!=='Lunas');
+    return `<p class="muted">Saldo kas saat ini</p><div class="balance">${rp(tin()-tout())}</div>
+    <div class="stats"><div>Pemasukan<b>${rp(tin())}</b></div><div>Pengeluaran<b>${rp(tout())}</b></div><div>Sudah lunas<b>${S.members.length-bl.length} dari ${S.members.length} orang</b></div></div>
+    <h2>Belum lunas</h2>`+(bl.length?`<div class="scroll"><table><tbody>${bl.map(m=>`<tr><td>${esc(m.name)}</td><td class="${st(m.id)}">${st(m.id)}</td><td class="n">kurang ${rp(due()-paidBy(m.id))}</td></tr>`).join('')}</tbody></table></div>`:'<p class="muted">Semua anggota sudah lunas.</p>');
+  }
+  if(S.tab==='Pembayaran'){
+    const forms=T()?`<form class="row" data-form="member"><input name="nama" placeholder="Nama anggota baru" required><button>Tambah anggota</button></form>
+    <form class="row" data-form="period"><input name="label" placeholder="Periode, mis. Minggu 5 Okt" required><input name="jml" type="number" min="1" placeholder="Iuran per orang" required><button>Tambah periode</button></form>`:'';
+    return forms+`<div class="scroll"><table><thead><tr><th>Nama</th>${S.periods.map(p=>`<th>${esc(p.label)}<br><small class="muted">${rp(p.amount)}</small></th>`).join('')}<th>Status</th></tr></thead><tbody>${S.members.map(m=>`<tr><td>${esc(m.name)}</td>${S.periods.map(p=>{const ok=S.pay.has(m.id+'|'+p.id);return `<td>${T()?`<button class="cell" data-m="${m.id}" data-p="${p.id}" aria-label="${ok?'Batalkan':'Catat'} pembayaran ${esc(m.name)}, ${esc(p.label)}">${ok?'✓':'–'}</button>`:(ok?'<span class="Lunas">✓</span>':'<span class="muted">–</span>')}</td>`}).join('')}<td class="${st(m.id)}">${st(m.id)}</td></tr>`).join('')}</tbody></table></div>`;
+  }
+  if(S.tab==='Pengeluaran'){
+    const f=T()?`<form class="row" data-form="exp"><input name="tgl" type="date" required><input name="ket" placeholder="Keterangan" required><input name="jml" type="number" min="1" placeholder="Jumlah" required><input name="nota" type="file" accept="image/*,application/pdf" aria-label="Foto nota"><button>Simpan pengeluaran</button></form>`:'';
+    return f+`<div class="scroll"><table><thead><tr><th>Tanggal</th><th>Keterangan</th><th class="n">Jumlah</th><th>Nota</th></tr></thead><tbody>${S.exp.map(e=>`<tr><td>${esc(e.d)}</td><td>${esc(e.k)}</td><td class="n">${rp(e.a)}</td><td>${e.nota?`<span class="Lunas">${esc(e.nota)}</span>`:'<span class="muted">tidak ada</span>'}</td></tr>`).join('')}</tbody></table></div>`;
+  }
+  return `<p>Di aplikasi asli, tombol di bawah mengunduh file CSV yang bisa dibuka di Excel atau Google Sheets. Di halaman contoh ini, unduhan dinonaktifkan, jadi isinya ditampilkan sebagai pratinjau.</p><pre>${esc(csv())}</pre>`;
+}
+
+function render(){
+  const y=scrollY;
+  document.getElementById('app').innerHTML=`<header><h1>Kas kelas</h1>
+  <button data-act="role">${T()?'Keluar (bendahara)':'Masuk sebagai bendahara'}</button></header>
+  <p class="note" role="note">Ini halaman contoh dengan data simulasi: perubahan hilang saat dimuat ulang dan belum tersambung ke Supabase. Tombol masuk di sini tanpa kata sandi.</p>
+  <nav aria-label="Bagian">${TABS.map(t=>`<button data-tab="${t}"${t===S.tab?' aria-current="page"':''}>${t}</button>`).join('')}</nav>${view()}`;
+  scrollTo(0,y);
+}
+
+document.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.tab){S.tab=b.dataset.tab;render()}
+  else if(b.dataset.act==='role'){S.role=T()?'viewer':'treasurer';render()}
+  else if(b.dataset.m!==undefined){const k=b.dataset.m+'|'+b.dataset.p;S.pay.has(k)?S.pay.delete(k):S.pay.add(k);render()}
+});
+document.addEventListener('submit',e=>{
+  e.preventDefault();
+  const f=e.target,k=f.dataset.form;
+  if(k==='member')S.members.push({id:Date.now(),name:f.nama.value.trim()});
+  if(k==='period')S.periods.push({id:Date.now(),label:f.label.value.trim(),amount:Number(f.jml.value)});
+  if(k==='exp')S.exp.unshift({d:f.tgl.value,k:f.ket.value.trim(),a:Number(f.jml.value),nota:f.nota.files[0]?f.nota.files[0].name:''});
+  render();
+});
+render();
+</script>
+</body>
+</html>
